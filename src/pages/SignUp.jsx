@@ -131,7 +131,7 @@ const SignUp = () => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, profileImage: reader.result }));
+                setFormData(prev => ({ ...prev, profileImage: reader.result, profileImageFile: file }));
             };
             reader.readAsDataURL(file);
         }
@@ -178,12 +178,20 @@ const SignUp = () => {
             // Step 2: Submit
             setLoading(true);
             try {
+                const payload = new FormData();
+                Object.keys(formData).forEach(key => {
+                    if (key !== 'profileImage' && key !== 'profileImageFile' && formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+                        payload.append(key, formData[key]);
+                    }
+                });
+
+                if (formData.profileImageFile) {
+                    payload.append('profileImage', formData.profileImageFile);
+                }
+
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
+                    body: payload,
                 });
 
                 const data = await response.json();
