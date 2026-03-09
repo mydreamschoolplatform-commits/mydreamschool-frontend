@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import DateSelector from '../components/common/DateSelector';
+import { API_BASE_URL } from '../api/config';
 
 const InputField = ({ labelKey, name, type = "text", placeholderKey, required = true, isTextArea = false, t, formData, errors, handleChange, handleBlur, reviewMode }) => (
     <div className="mb-4">
@@ -189,24 +190,28 @@ const SignUp = () => {
                     payload.append('profileImage', formData.profileImageFile);
                 }
 
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    body: payload,
-                });
-
-                // Safely parse: read as text first, then try JSON so we never
-                // get "Unexpected end of JSON input" from an empty proxy response
-                const responseText = await response.text();
+                const REGISTER_URL = `${API_BASE_URL}/auth/register`;
                 let data = {};
                 try {
-                    data = JSON.parse(responseText);
-                } catch (_) {
-                    // response body was empty or non-JSON (e.g. proxy error)
-                    throw new Error('Server did not respond. Please try again.');
-                }
+                    // Use absolute URL from env config so this works in both
+                    // local development (localhost:5000) and production (Render)
+                    const response = await fetch(REGISTER_URL, {
+                        method: 'POST',
+                        body: payload,
+                    });
 
-                if (!response.ok) {
-                    throw new Error(data.message || 'Registration failed');
+                    const responseText = await response.text();
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (_) {
+                        throw new Error(`Server error (${response.status}). Please try again.`);
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Registration failed');
+                    }
+                } catch (fetchErr) {
+                    throw fetchErr;
                 }
 
                 // Success
