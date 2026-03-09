@@ -194,7 +194,16 @@ const SignUp = () => {
                     body: payload,
                 });
 
-                const data = await response.json();
+                // Safely parse: read as text first, then try JSON so we never
+                // get "Unexpected end of JSON input" from an empty proxy response
+                const responseText = await response.text();
+                let data = {};
+                try {
+                    data = JSON.parse(responseText);
+                } catch (_) {
+                    // response body was empty or non-JSON (e.g. proxy error)
+                    throw new Error('Server did not respond. Please try again.');
+                }
 
                 if (!response.ok) {
                     throw new Error(data.message || 'Registration failed');
