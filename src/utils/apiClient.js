@@ -9,6 +9,7 @@ if (apiUrl && apiUrl.endsWith('/api')) {
 // Create a configured instance
 const apiClient = axios.create({
     baseURL: apiUrl,
+    timeout: 30000, // 30 seconds timeout to prevent infinite hanging
     headers: {
         'Content-Type': 'application/json',
     },
