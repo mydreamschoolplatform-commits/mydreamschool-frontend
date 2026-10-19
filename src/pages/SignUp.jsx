@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import DateSelector from '../components/common/DateSelector';
 import { API_BASE_URL } from '../api/config';
+import { compressImage } from '../utils/imageOptimizer';
 
 const InputField = ({ labelKey, name, type = "text", placeholderKey, required = true, isTextArea = false, t, formData, errors, handleChange, handleBlur, reviewMode }) => (
     <div className="mb-4">
@@ -78,6 +79,7 @@ const SignUp = () => {
     const [loading, setLoading] = useState(false);
     const [reviewMode, setReviewMode] = useState(false);
     const [errors, setErrors] = useState({});
+    const [imageCompressing, setImageCompressing] = useState(false);
     const [formData, setFormData] = useState({
         fullName: '', username: '', password: '', confirmPassword: '',
         gender: '', dateOfBirth: '',
@@ -86,8 +88,19 @@ const SignUp = () => {
         village: '', mandal: '', district: '',
         favouriteSubject: '', lifeAmbition: '', favouriteSport: '',
         consentAcknowledged: false,
-        profileImage: ''
+        profileImage: '',
+        profileImageFile: null
     });
+
+    // Best-effort non-blocking background wake-up for dormant backends (e.g., Render free tier).
+    // Does not delay rendering or disable the form, does not retry, and fails silently on errors.
+    // Note: This is an opportunistic optimization, not a guarantee that Render will stay awake.
+    useEffect(() => {
+        const healthUrl = `${API_BASE_URL.replace(/\/api\/?$/, '')}/health`;
+        fetch(healthUrl, { method: 'GET' }).catch(() => {
+            // Silently ignore errors so offline/flaky network never disrupts user form completion
+        });
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -127,14 +140,50 @@ const SignUp = () => {
         }
     };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+    const handleImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setErrors(prev => ({ ...prev, profileImage: '' }));
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setErrors(prev => ({ ...prev, profileImage: 'Only JPEG, PNG and WebP images are allowed.' }));
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            setErrors(prev => ({ ...prev, profileImage: 'Image size must be less than 10MB.' }));
+            return;
+        }
+
+        setImageCompressing(true);
+        try {
+            // Target reasonable dimensions for student profile photo (600px width, 0.7 quality)
+            let optimizedFile = file;
+            try {
+                optimizedFile = await compressImage(file, 600, 0.7);
+            } catch (compErr) {
+                console.warn('Image compression fallback to original file:', compErr);
+                optimizedFile = file;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, profileImage: reader.result, profileImageFile: file }));
+                setFormData(prev => ({
+                    ...prev,
+                    profileImage: reader.result,
+                    profileImageFile: optimizedFile
+                }));
+                setImageCompressing(false);
             };
-            reader.readAsDataURL(file);
+            reader.onerror = () => {
+                setImageCompressing(false);
+            };
+            reader.readAsDataURL(optimizedFile);
+        } catch (err) {
+            console.error('Image processing error:', err);
+            setImageCompressing(false);
         }
     };
 
@@ -301,12 +350,23 @@ const SignUp = () => {
                                         {t('profile_image')}
                                     </label>
                                     {!reviewMode ? (
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        />
+                                        <>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={handleImageChange}
+                                                disabled={imageCompressing}
+                                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                                            />
+                                            {imageCompressing && (
+                                                <p className="text-xs text-blue-600 mt-1 font-medium animate-pulse">
+                                                    Optimizing image for fast upload...
+                                                </p>
+                                            )}
+                                            {errors.profileImage && (
+                                                <p className="text-xs text-red-500 mt-1">{errors.profileImage}</p>
+                                            )}
+                                        </>
                                     ) : (
                                         <div className="mt-2">
                                             {formData.profileImage ? (
@@ -413,10 +473,10 @@ const SignUp = () => {
                                 )}
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className={`flex-1 ${reviewMode ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg transform active:scale-[0.99] uppercase tracking-wider ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    disabled={loading || imageCompressing}
+                                    className={`flex-1 ${reviewMode ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg transform active:scale-[0.99] uppercase tracking-wider ${(loading || imageCompressing) ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
-                                    {loading ? 'Processing...' : (reviewMode ? t('confirm_register') : t('review_details'))}
+                                    {loading ? 'Processing...' : (imageCompressing ? 'Optimizing Photo...' : (reviewMode ? t('confirm_register') : t('review_details')))}
                                 </button>
                             </div>
 
