@@ -12,8 +12,8 @@ const ResetPassword = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [showPassword, setShowPassword] = useState(true);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -121,6 +121,10 @@ const ResetPassword = () => {
                                             placeholder={t('enter_username')}
                                             value={formData.username}
                                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                            autoCapitalize="none"
+                                            autoCorrect="off"
+                                            spellCheck={false}
+                                            autoComplete="username"
                                             required
                                         />
                                     </div>
@@ -161,6 +165,10 @@ const ResetPassword = () => {
                                                 placeholder="••••••••"
                                                 value={formData.newPassword}
                                                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                                                autoCapitalize="none"
+                                                autoCorrect="off"
+                                                spellCheck={false}
+                                                autoComplete="new-password"
                                                 required
                                                 minLength={6}
                                             />
@@ -168,6 +176,7 @@ const ResetPassword = () => {
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                                                aria-label={showPassword ? "Hide password" : "Show password"}
                                             >
                                                 {showPassword ? (
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -188,12 +197,17 @@ const ResetPassword = () => {
                                                 placeholder="••••••••"
                                                 value={formData.confirmPassword}
                                                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                                autoCapitalize="none"
+                                                autoCorrect="off"
+                                                spellCheck={false}
+                                                autoComplete="new-password"
                                                 required
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                                             >
                                                 {showConfirmPassword ? (
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -203,8 +217,8 @@ const ResetPassword = () => {
                                             </button>
                                         </div>
                                     </div>
-                                </>
-                            )}
+                            </>
+                        )}
 
                             <button
                                 type="submit"

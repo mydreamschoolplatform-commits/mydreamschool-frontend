@@ -12,7 +12,7 @@ const Login = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ username: '', password: '' });
-    const [showPassword, setShowPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false); // Form loading state
 
@@ -37,8 +37,8 @@ const Login = () => {
         } else {
             if (res.status === 404) {
                 setError('User not found. Please check your username.');
-            } else if (res.status === 401) {
-                setError('Incorrect password. Please try again.');
+            } else if (res.status === 401 || res.status === 400) {
+                setError(res.message || 'Invalid Credentials. Please check your username and password.');
             } else {
                 // Show detailed error for debugging
                 const debugMsg = res.message || 'Connection failed';
@@ -90,6 +90,10 @@ const Login = () => {
                                         placeholder={t('enter_username')}
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                        autoCapitalize="none"
+                                        autoCorrect="off"
+                                        spellCheck={false}
+                                        autoComplete="username"
                                         required
                                     />
                                 </div>
@@ -103,12 +107,17 @@ const Login = () => {
                                             placeholder="••••••••"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            autoCapitalize="none"
+                                            autoCorrect="off"
+                                            spellCheck={false}
+                                            autoComplete="current-password"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
                                         >
                                             {showPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>

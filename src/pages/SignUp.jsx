@@ -6,41 +6,89 @@ import DateSelector from '../components/common/DateSelector';
 import { API_BASE_URL } from '../api/config';
 import { compressImage } from '../utils/imageOptimizer';
 
-const InputField = ({ labelKey, name, type = "text", placeholderKey, required = true, isTextArea = false, t, formData, errors, handleChange, handleBlur, reviewMode }) => (
+const InputField = ({ labelKey, name, type = "text", placeholderKey, required = true, isTextArea = false, t, formData, errors, handleChange, handleBlur, reviewMode, autoCapitalize, autoCorrect, spellCheck, autoComplete }) => {
+    const isUppercase = !['username', 'password', 'confirmPassword'].includes(name) && type !== 'password';
+
+    return (
+        <div className="mb-4">
+            <label className="block text-sm font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                {t(labelKey)} {required && <span className="text-red-500">*</span>}
+            </label>
+            {!reviewMode ? (
+                <>
+                    {isTextArea ? (
+                        <textarea
+                            name={name}
+                            value={formData[name]}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            placeholder={t(placeholderKey)}
+                            autoCapitalize={autoCapitalize}
+                            autoCorrect={autoCorrect}
+                            spellCheck={spellCheck}
+                            autoComplete={autoComplete}
+                            className={`w-full px-4 py-2 rounded-lg border focus:ring-2 transition-all outline-none text-slate-800 ${isUppercase ? 'uppercase' : ''} ${errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'}`}
+                            rows="3"
+                        />
+                    ) : (
+                        <input
+                            type={type}
+                            name={name}
+                            value={formData[name]}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            placeholder={t(placeholderKey)}
+                            autoCapitalize={autoCapitalize}
+                            autoCorrect={autoCorrect}
+                            spellCheck={spellCheck}
+                            autoComplete={autoComplete}
+                            className={`w-full px-4 py-2 rounded-lg border focus:ring-2 transition-all outline-none text-slate-800 ${isUppercase ? 'uppercase' : ''} ${errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'}`}
+                        />
+                    )}
+                    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+                </>
+            ) : (
+                <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-800 font-medium">
+                    {type === 'password' ? '********' : formData[name] || '-'}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const PasswordInputField = ({ labelKey, name, placeholderKey, required = true, t, formData, errors, handleChange, handleBlur, showPassword, setShowPassword, autoComplete = "new-password" }) => (
     <div className="mb-4">
         <label className="block text-sm font-semibold text-slate-700 mb-1 uppercase tracking-wide">
             {t(labelKey)} {required && <span className="text-red-500">*</span>}
         </label>
-        {!reviewMode ? (
-            <>
-                {isTextArea ? (
-                    <textarea
-                        name={name}
-                        value={formData[name]}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        placeholder={t(placeholderKey)}
-                        className={`w-full px-4 py-2 rounded-lg border focus:ring-2 transition-all outline-none text-slate-800 uppercase ${errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'}`}
-                        rows="3"
-                    />
+        <div className="relative">
+            <input
+                type={showPassword ? "text" : "password"}
+                name={name}
+                value={formData[name]}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder={t(placeholderKey)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete={autoComplete}
+                className={`w-full pl-4 pr-12 py-2 rounded-lg border focus:ring-2 transition-all outline-none text-slate-800 ${errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'}`}
+            />
+            <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+                {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                 ) : (
-                    <input
-                        type={type}
-                        name={name}
-                        value={formData[name]}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        placeholder={t(placeholderKey)}
-                        className={`w-full px-4 py-2 rounded-lg border focus:ring-2 transition-all outline-none text-slate-800 uppercase ${errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'}`}
-                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
                 )}
-                {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-            </>
-        ) : (
-            <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-800 font-medium">
-                {type === 'password' ? '********' : formData[name] || '-'}
-            </div>
-        )}
+            </button>
+        </div>
+        {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
     </div>
 );
 
@@ -80,6 +128,8 @@ const SignUp = () => {
     const [reviewMode, setReviewMode] = useState(false);
     const [errors, setErrors] = useState({});
     const [imageCompressing, setImageCompressing] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState({
         fullName: '', username: '', password: '', confirmPassword: '',
         gender: '', dateOfBirth: '',
@@ -121,6 +171,11 @@ const SignUp = () => {
     const handleBlur = (e) => {
         const { name, value } = e.target;
         if (typeof value === 'string') {
+            // Never silently trim, lowercase, uppercase, or transform passwords
+            if (name === 'password' || name === 'confirmPassword') {
+                return;
+            }
+
             const upperCaseFields = [
                 'fullName', 'schoolName', 'medium',
                 'fatherName', 'motherName',
@@ -432,16 +487,63 @@ const SignUp = () => {
                                 <InputField labelKey="favourite_sport" name="favouriteSport" placeholderKey="enter_favourite_sport" required={false} {...commonProps} />
                             </div>
 
-                            {/* 6. Account Credentials */}
-                            {!reviewMode && (
-                                <>
-                                    <h3 className="text-lg font-bold text-slate-800 mt-6 mb-4 border-b pb-2 uppercase text-blue-600">6. Account Setup</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <InputField labelKey="username" name="username" placeholderKey="enter_username" {...commonProps} />
-                                        <InputField labelKey="password" name="password" type="password" placeholderKey="enter_password" {...commonProps} />
-                                        <InputField labelKey="confirm_password" name="confirmPassword" type="password" placeholderKey="enter_confirm_password" {...commonProps} />
+                            {/* 6. Account Setup */}
+                            <div className={reviewMode ? "hidden" : "block"}>
+                                <h3 className="text-lg font-bold text-slate-800 mt-6 mb-4 border-b pb-2 uppercase text-blue-600">6. Account Setup</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <InputField
+                                        labelKey="username"
+                                        name="username"
+                                        placeholderKey="enter_username"
+                                        autoCapitalize="none"
+                                        autoCorrect="off"
+                                        spellCheck={false}
+                                        autoComplete="username"
+                                        {...commonProps}
+                                    />
+                                    <PasswordInputField
+                                        labelKey="password"
+                                        name="password"
+                                        placeholderKey="enter_password"
+                                        t={t}
+                                        formData={formData}
+                                        errors={errors}
+                                        handleChange={handleChange}
+                                        handleBlur={handleBlur}
+                                        showPassword={showPassword}
+                                        setShowPassword={setShowPassword}
+                                        autoComplete="new-password"
+                                    />
+                                    <PasswordInputField
+                                        labelKey="confirm_password"
+                                        name="confirmPassword"
+                                        placeholderKey="enter_confirm_password"
+                                        t={t}
+                                        formData={formData}
+                                        errors={errors}
+                                        handleChange={handleChange}
+                                        handleBlur={handleBlur}
+                                        showPassword={showConfirmPassword}
+                                        setShowPassword={setShowConfirmPassword}
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+                            </div>
+
+                            {reviewMode && (
+                                <div className="mt-6 border-t pt-4">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2 uppercase text-blue-600">6. Account Setup</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-800 font-medium">
+                                            <span className="text-xs text-slate-500 uppercase block font-semibold">{t('username')}</span>
+                                            {formData.username || '-'}
+                                        </div>
+                                        <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-800 font-medium">
+                                            <span className="text-xs text-slate-500 uppercase block font-semibold">{t('password')}</span>
+                                            ••••••••
+                                        </div>
                                     </div>
-                                </>
+                                </div>
                             )}
 
                             {/* 7. Consent */}
