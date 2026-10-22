@@ -6,6 +6,39 @@ import { useLanguage } from '../context/LanguageContext';
 import TranslationTooltip from '../components/dashboard/TranslationTooltip';
 import SecureVideoPlayer from '../components/common/SecureVideoPlayer';
 
+// ── Question Explanation Component (Post-submission review only) ─────────
+const QuestionExplanation = ({ explanation }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    if (!explanation || !explanation.trim()) return null;
+
+    return (
+        <div className="mt-4 pt-4 border-t border-slate-100">
+            <button
+                type="button"
+                onClick={() => setIsExpanded(prev => !prev)}
+                className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 rounded px-1 -ml-1"
+                aria-expanded={isExpanded}
+            >
+                <span className="w-5 h-5 rounded-full border border-indigo-600 flex items-center justify-center text-xs font-bold leading-none">
+                    {isExpanded ? '−' : 'i'}
+                </span>
+                <span>{isExpanded ? 'Hide Explanation' : 'View Explanation'}</span>
+            </button>
+            {isExpanded && (
+                <div className="mt-3 p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-1">
+                        Explanation
+                    </p>
+                    <p className="font-normal text-slate-800">
+                        {explanation}
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ExamPlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -1108,13 +1141,8 @@ const ExamPlayer = () => {
                                         )}
                                     </div>
 
-                                    {/* SECTION D: Explanation Placeholder */}
-                                    <div className="mt-4 pt-4 border-t border-slate-100">
-                                        <button className="text-sm font-bold text-slate-400 flex items-center gap-2 cursor-not-allowed hover:text-slate-500 transition-colors">
-                                            <span className="w-5 h-5 rounded-full border border-current flex items-center justify-center text-[10px]">i</span>
-                                            View Explanation (Coming Soon)
-                                        </button>
-                                    </div>
+                                    {/* SECTION D: Explanation */}
+                                    <QuestionExplanation explanation={q.explanation} />
                                 </div>
                             </div>
                         ))}
